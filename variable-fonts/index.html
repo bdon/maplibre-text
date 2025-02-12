@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>maplibre webfonts</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css" crossorigin="anonymous">
+        <script src="../webfonts/maplibre-gl-dev.js"></script>
+        <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: monospace;
+            }
+            html,
+            body, #map {
+                height: 100dvh;
+            }
+
+            #overlay {
+                position: absolute;
+                top: 0;
+                z-index: 9999;
+                background: white;
+                padding: 12px;
+            }
+
+            @font-face {
+              font-family: "Commissioner Black";
+              src: url("Commissioner_VF_1.001.woff2") format("woff2-variations");
+              font-weight: 800;
+            }
+
+            @font-face {
+              font-family: "Commissioner Medium";
+              src: url("Commissioner_VF_1.001.woff2") format("woff2-variations");
+              font-weight: 600;
+            }
+
+            @font-face {
+              font-family: "Commissioner Light";
+              src: url("Commissioner_VF_1.001.woff2") format("woff2-variations");
+              font-weight: 200;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="overlay">
+            <h1>maplibre variable fonts</h1>
+            <p>Three font weights from a single .woff2 file, no <a href="https://maplibre.org/maplibre-style-spec/glyphs/">glyphs</a> needed</p>
+            <p>branch: <a href="https://github.com/1ec5/maplibre-gl-js">1ec5/maplibre-gl-js</a></p>
+        </div>
+        <script>
+            const protocol = new pmtiles.Protocol();
+            maplibregl.addProtocol("pmtiles", protocol.tile);
+
+            const PMTILES_URL =
+                "https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles";
+
+            const p = new pmtiles.PMTiles(PMTILES_URL);
+            protocol.add(p);
+
+            p.getHeader().then(async (h) => {
+                await document.fonts.load("24px Commissioner Black");
+                await document.fonts.load("24px Commissioner Medium");
+                await document.fonts.load("24px Commissioner Light");
+                const map = new maplibregl.Map({
+                    container: "map",
+                    zoom: h.maxZoom - 2,
+                    center: [h.centerLon, h.centerLat],
+                    style: {
+                        glyphs: "{fontstack}{range}",
+                        version: 8,
+                        sources: {
+                            example_source: {
+                                type: "vector",
+                                url: `pmtiles://${PMTILES_URL}`,
+                                attribution:
+                                    '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+                            },
+                        },
+                        layers: [
+                            {
+                                id: "buildings",
+                                source: "example_source",
+                                "source-layer": "landuse",
+                                type: "fill",
+                                paint: {
+                                    "fill-color": "#eee",
+                                },
+                            },
+                            {
+                                id: "roads",
+                                source: "example_source",
+                                "source-layer": "roads",
+                                type: "line",
+                                paint: {
+                                    "line-color": "#ddd",
+                                },
+                            },
+                            {
+                                id: "pois",
+                                source: "example_source",
+                                "source-layer": "pois",
+                                type: "symbol",
+                                layout: {
+                                    "text-font": [
+                                        "case",
+                                        ["==",["get","pmap:kind"],"library"],
+                                        ["literal",["Commissioner Black"]],
+                                        ["==",["get","pmap:kind"],"park"],
+                                        ["literal",["Commissioner Medium"]],
+                                        ["literal",["Commissioner Light"]]
+                                    ],
+                                    "text-size": 14,
+                                    "text-field": ["get", "name"],
+                                },
+                                paint: {
+                                    "text-halo-color": "white",
+                                    "text-halo-width": 0.8,
+                                },
+                            },
+                        ],
+                    },
+                });
+            });
+        </script>
+    </body>
+</html>
